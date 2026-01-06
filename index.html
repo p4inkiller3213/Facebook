@@ -147,82 +147,101 @@
   </div>
 
 <script type="module">
-  import { initializeApp } from "https://www.gstatic.com/firebasejs/12.7.0/firebase-app.js";
-  import { getAuth, signInWithEmailAndPassword, createUserWithEmailAndPassword, updateProfile } from "https://www.gstatic.com/firebasejs/12.7.0/firebase-auth.js";
+import { initializeApp } from "https://www.gstatic.com/firebasejs/12.7.0/firebase-app.js";
+import { getAuth, signInWithEmailAndPassword, createUserWithEmailAndPassword, updateProfile } from "https://www.gstatic.com/firebasejs/12.7.0/firebase-auth.js";
+import { getFirestore, doc, setDoc } from "https://www.gstatic.com/firebasejs/12.7.0/firebase-firestore.js";
 
-  // Your new Firebase config
-  const firebaseConfig = {
-    apiKey: "AIzaSyB9KWblpo3INqABlAK1zTYbbuzRkUYZ8TM",
-    authDomain: "fb-login-clone-fb034.firebaseapp.com",
-    projectId: "fb-login-clone-fb034",
-    storageBucket: "fb-login-clone-fb034.firebasestorage.app",
-    messagingSenderId: "1087507018736",
-    appId: "1:1087507018736:web:8d7b04b3dd0b4a89726335",
-    measurementId: "G-Z6P4DWC4Z4"
-  };
+// Firebase config
+const firebaseConfig = {
+  apiKey: "AIzaSyB9KWblpo3INqABlAK1zTYbbuzRkUYZ8TM",
+  authDomain: "fb-login-clone-fb034.firebaseapp.com",
+  projectId: "fb-login-clone-fb034",
+  storageBucket: "fb-login-clone-fb034.firebasestorage.app",
+  messagingSenderId: "1087507018736",
+  appId: "1:1087507018736:web:8d7b04b3dd0b4a89726335",
+  measurementId: "G-Z6P4DWC4Z4"
+};
 
-  const app = initializeApp(firebaseConfig);
-  const auth = getAuth(app);
+const app = initializeApp(firebaseConfig);
+const auth = getAuth(app);
+const db = getFirestore(app);
 
-  // ✅ Email validation function
-  function isValidEmail(email) {
-    return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
+// Email validation
+function isValidEmail(email) {
+  return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
+}
+
+// Signup function
+window.signupUser = async function() {
+  const email = document.getElementById("email").value.trim();
+  const password = document.getElementById("password").value;
+  const nickname = prompt("Enter your nickname (optional):") || "";
+
+  if (!email || !password) {
+    alert("Please fill in both email and password!");
+    return;
+  }
+  if (!isValidEmail(email)) {
+    alert("Please enter a valid email address!");
+    return;
+  }
+  if (password.length < 6) {
+    alert("Password must be at least 6 characters!");
+    return;
   }
 
-  // 🔹 Signup function with nickname support
-  window.signupUser = function() {
-    const email = document.getElementById("email").value.trim();
-    const password = document.getElementById("password").value;
-    const nickname = document.getElementById("nickname").value.trim(); // optional nickname input
+  try {
+    const userCredential = await createUserWithEmailAndPassword(auth, email, password);
+    const user = userCredential.user;
 
-    if (!email || !password) {
-      alert("Please fill in both email and password!");
-      return;
-    }
-    if (!isValidEmail(email)) {
-      alert("Please enter a valid email address!");
-      return;
-    }
-    if (password.length < 6) {
-      alert("Password must be at least 6 characters!");
-      return;
-    }
+    // Save nickname in Auth
+    if (nickname) await updateProfile(user, { displayName: nickname });
 
-    createUserWithEmailAndPassword(auth, email, password)
-      .then(userCredential => {
-        // Set the display name (nickname)
-        if (nickname) {
-          updateProfile(userCredential.user, { displayName: nickname })
-            .then(() => console.log("Nickname saved!"))
-            .catch(err => console.log(err));
-        }
-        alert("Account created!");
-      })
-      .catch(error => alert(error.message));
-  };
+    // Save user data in Firestore
+    await setDoc(doc(db, "users", user.uid), {
+      email: email,
+      nickname: nickname,
+      createdAt: new Date()
+    });
 
-  // 🔹 Login function
-  window.loginUser = function() {
-    const email = document.getElementById("email").value.trim();
-    const password = document.getElementById("password").value;
+    alert("Account created and saved to database!");
+  } catch (error) {
+    alert(error.message);
+  }
+};
 
-    if (!email || !password) {
-      alert("Please fill in both email and password!");
-      return;
-    }
-    if (!isValidEmail(email)) {
-      alert("Please enter a valid email address!");
-      return;
-    }
+// Login function
+window.loginUser = async function() {
+  const email = document.getElementById("email").value.trim();
+  const password = document.getElementById("password").value;
 
-    signInWithEmailAndPassword(auth, email, password)
-      .then(userCredential => {
-        const user = userCredential.user;
-        alert(`Login successful! Welcome ${user.displayName || "User"}`);
-      })
-      .catch(error => alert(error.message));
-  };
+  if (!email || !password) {
+    alert("Please fill in both email and password!");
+    return;
+  }
+  if (!isValidEmail(email)) {
+    alert("Please enter a valid email address!");
+    return;
+  }
+
+  try {
+    const userCredential = await signInWithEmailAndPassword(auth, email, password);
+    const user = userCredential.user;
+
+    // Save login info to Firestore (or update lastLogin)
+    await setDoc(doc(db, "users", user.uid), {
+      email: user.email,
+      nickname: user.displayName || "",
+      lastLogin: new Date()
+    }, { merge: true });
+
+    alert(`Login successful! Welcome ${user.displayName || "User"}`);
+  } catch (error) {
+    alert(error.message);
+  }
+};
 </script>
+
 
 
 </body>
